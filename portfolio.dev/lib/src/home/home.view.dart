@@ -22,7 +22,7 @@ class HomeView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Software Engineer',
+                '<Software Engineer/>',
                 style: TextStyle(
                   fontSize: 24,
                   color: Colors.grey[600],

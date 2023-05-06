@@ -1,18 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_assist/util/log.util.dart';
 import 'package:scaled_app/scaled_app.dart';
 
 import 'app/cache_manager.dart';
 import 'app/database_manager.dart';
 import 'app/remote_methods.dart';
-// import 'firebase_options.dart';
 import 'src/alert/alert.dart';
 import 'src/home/home.view.dart';
 
 void main() async {
+  LogUtil.init();
+
+  LogUtil.devLog("main", message: "Initializing Scaled App");
   ScaledWidgetsFlutterBinding.ensureInitialized(
     scaleFactor: (deviceSize) {
       // screen width used in your UI design
@@ -33,10 +34,8 @@ void main() async {
   //*   }
   //* }
 
-  Animate.restartOnHotReload =
-      true; //? This makes all animations from flutter_animate restart on hot reload
-
-  LogUtil.init();
+  //? This makes all animations from flutter_animate restart on hot reload
+  // Animate.restartOnHotReload = true;
 
   LogUtil.devLog("main", message: "Initializing Cache manager");
   await CacheManager.init();
@@ -45,11 +44,6 @@ void main() async {
       defaultTargetPlatform == TargetPlatform.iOS) {
     LogUtil.devLog("main", message: "Initializing database manager");
     await DatabaseManager.init();
-
-    // LogUtil.devLog("main", message: "Initializing Firebase app");
-    // await Firebase.initializeApp(
-    //   options: DefaultFirebaseOptions.currentPlatform,
-    // );
 
     LogUtil.devLog("main", message: "Initializing Remote methods");
     RemoteMethods.init();
