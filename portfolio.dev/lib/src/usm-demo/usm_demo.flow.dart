@@ -3,7 +3,13 @@ import 'package:flutter_assist/flutter_assist.dart';
 
 import '../../app/streamed_value.dart';
 import '../../app/types.dart';
-import 'usm_demo.view.dart';
+import '../../util/alert.util.dart';
+import 'services/bfs.service.dart';
+import 'services/bibi.service.dart';
+import 'services/dfs.service.dart';
+import 'services/dls.service.dart';
+import 'services/ids.service.dart';
+import 'services/ucs.service.dart';
 import 'weight/weight.view.dart';
 
 class UsmDemoFlow {
@@ -40,6 +46,7 @@ class UsmDemoFlow {
     "Z"
   ];
 
+  StreamedValue<bool> canReset = StreamedValue<bool>(initialValue: false);
   final StreamedValue<CostMap> costs = StreamedValue<CostMap>(initialValue: {});
   final StreamedValue<int> depthLimit = StreamedValue<int>(initialValue: 0);
   StreamedValue<bool> directed = StreamedValue<bool>(initialValue: false);
@@ -60,14 +67,6 @@ class UsmDemoFlow {
   final Map<Vertex, Color> vertexColorMap = {};
   StreamedValue<bool> weighted = StreamedValue<bool>(initialValue: false);
 
-  static void start(BuildContext context) {
-    FlowUtil.moveTo(
-      context: context,
-      page: UsmDemoView(flow: UsmDemoFlow()),
-      transition: FlowTransition.fade,
-    );
-  }
-
   void createVertex(Offset position) async {
     if (vIndex >= 26) return;
 
@@ -77,6 +76,17 @@ class UsmDemoFlow {
 
     positions.mutate((state) => state.putIfAbsent(vertex, () => position));
     graph.mutate((state) => state.putIfAbsent(vertex, () => <String>{}));
+  }
+
+  void moveVertex(Offset position, Vertex vertex) {
+    positions.mutate(
+      (state) => state.update(
+        vertex,
+        (oldPosition) => position,
+        ifAbsent: () => position,
+      ),
+    );
+    graph.mutate((state) => state);
   }
 
   void createEdge(Vertex vertex, BuildContext context) async {
@@ -153,7 +163,93 @@ class UsmDemoFlow {
     edgeColorMap.clear();
   }
 
-  void drawPath({required Path path, Color color = Colors.black}) {
+  void resetGraph() {
+    vertexColorMap.updateAll((key, value) => Colors.black);
+    edgeColorMap.updateAll((key, value) => Colors.black);
+    graph.mutate((state) => state);
+    canReset.update(false);
+  }
+
+  Future<void> startMethod() async {
+    if (canReset.value) {
+      AlertUtil.showWarning("Please reset the graph.");
+      return;
+    }
+
+    if (root.value == null || goal.value == null) {
+      AlertUtil.showWarning("Please select both a root and goal node.");
+      return;
+    }
+
+    switch (searchMethod.value) {
+      case Usm.bfs:
+        final path = await BfsService.start(
+          graph: graph.value,
+          goal: goal.value!,
+          root: root.value!,
+          drawPath: (p0, p1) => _drawPath(path: p0, color: p1),
+        );
+        canReset.update(true);
+        break;
+
+      case Usm.dfs:
+        final path = await DfsService.start(
+          graph: graph.value,
+          goal: goal.value!,
+          root: root.value!,
+          drawPath: (p0, p1) => _drawPath(path: p0, color: p1),
+        );
+        canReset.update(true);
+        break;
+
+      case Usm.dls:
+        final path = await DlsService.start(
+          graph: graph.value,
+          goal: goal.value!,
+          root: root.value!,
+          depthLimit: depthLimit.value,
+          drawPath: (p0, p1) => _drawPath(path: p0, color: p1),
+        );
+        canReset.update(true);
+        break;
+
+      case Usm.ids:
+        final path = await IdsService.start(
+          graph: graph.value,
+          goal: goal.value!,
+          root: root.value!,
+          depthLimit: depthLimit.value,
+          resetGraph: resetGraph,
+          drawPath: (p0, p1) => _drawPath(path: p0, color: p1),
+        );
+        canReset.update(true);
+        break;
+
+      case Usm.bidi:
+        final path = await BidiService.start(
+          graph: graph.value,
+          goal: goal.value!,
+          root: root.value!,
+          depthLimit: depthLimit.value,
+          drawPath: (p0, p1) => _drawPath(path: p0, color: p1),
+        );
+        canReset.update(true);
+        break;
+
+      case Usm.ucs:
+        final path = await UcsService.start(
+          graph: graph.value,
+          goal: goal.value!,
+          root: root.value!,
+          edgeCosts: costs.value,
+          drawPath: (p0, p1) => _drawPath(path: p0, color: p1),
+        );
+        canReset.update(true);
+        break;
+    }
+  }
+
+  void _drawPath({required Path path, Color color = Colors.black}) {
     var start = path[0];
 
     for (int i = 1; i < path.length; i++) {
@@ -162,6 +258,10 @@ class UsmDemoFlow {
       vertexColorMap[start] = color;
       vertexColorMap[end] = color;
       edgeColorMap["$start-$end"] = color;
+      if (!directed.value) {
+        edgeColorMap["$end-$start"] = color;
+      }
+      start = end;
 
       graph.mutate((state) => state);
     }

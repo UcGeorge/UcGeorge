@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/fonts.dart';
+import '../../../../util/alert.util.dart';
 import '../../usm_demo.flow.dart';
 
 class MethodSelector extends StatelessWidget {
@@ -57,8 +58,14 @@ class MethodSelector extends StatelessWidget {
                     }.call()),
                   );
                 }).toList(),
-                onChanged: (newState) =>
-                    flow.searchMethod.update(newState ?? Usm.bfs),
+                onChanged: (newState) {
+                  if (newState == Usm.ucs && !flow.weighted.value) {
+                    AlertUtil.showWarning(
+                        "Cannot perform Uniform Cost Search on an un-weighted graph!");
+                    return;
+                  }
+                  flow.searchMethod.update(newState ?? Usm.bfs);
+                },
               ),
             ),
           );
