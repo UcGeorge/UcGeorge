@@ -12,7 +12,7 @@ I'm a passionate software engineer with a focus on mobile app development. I lov
 - Database: SQL, MongoDB
 
 ## Projects
-- **[USM Demo](https://ucgeorge.github.io/usm-demo):** A web application that showcases visualizations of six different uninformed search methods.
+- **[USM Demo](https://ucgeorge.github.io/#/usm-demo):** A web application that showcases visualizations of six different uninformed search methods.
 
 ## Contact Me
 
