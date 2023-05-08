@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:scaled_app/scaled_app.dart';
 
+import 'home.flow.dart';
+
 class HomeView extends StatelessWidget {
-  const HomeView({super.key});
+  const HomeView({super.key, required this.flow});
+
+  final HomeFlow flow;
 
   @override
   Widget build(BuildContext context) {

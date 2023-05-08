@@ -2,13 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_assist/util/log.util.dart';
+import 'package:go_router/go_router.dart';
 import 'package:scaled_app/scaled_app.dart';
 
-import 'app/cache_manager.dart';
-import 'app/database_manager.dart';
-import 'app/remote_methods.dart';
 import 'src/alert/alert.dart';
+import 'src/home/home.flow.dart';
 import 'src/home/home.view.dart';
+import 'src/usm-demo/usm_demo.flow.dart';
+import 'src/usm-demo/usm_demo.view.dart';
 
 void main() async {
   LogUtil.init();
@@ -37,17 +38,8 @@ void main() async {
   //? This makes all animations from flutter_animate restart on hot reload
   // Animate.restartOnHotReload = true;
 
-  LogUtil.devLog("main", message: "Initializing Cache manager");
-  await CacheManager.init();
-
   if (defaultTargetPlatform == TargetPlatform.android ||
       defaultTargetPlatform == TargetPlatform.iOS) {
-    LogUtil.devLog("main", message: "Initializing database manager");
-    await DatabaseManager.init();
-
-    LogUtil.devLog("main", message: "Initializing Remote methods");
-    RemoteMethods.init();
-
     LogUtil.devLog("main", message: "Presetting allowed orientations");
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -56,11 +48,25 @@ void main() async {
   }
 
   LogUtil.devLog("main", message: "Running app");
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+
+  // GoRouter configuration
+  final _router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => HomeView(flow: HomeFlow()),
+      ),
+      GoRoute(
+        path: '/usm-demo',
+        builder: (context, state) => UsmDemoView(flow: UsmDemoFlow()),
+      ),
+    ],
+  );
 
   // This widget is the root of your application.
   @override
@@ -73,11 +79,11 @@ class MyApp extends StatelessWidget {
           SystemChannels.textInput.invokeMethod('TextInput.hide');
         }
       },
-      child: const AlertWrapper(
-        app: MaterialApp(
+      child: AlertWrapper(
+        app: MaterialApp.router(
           title: 'UcGeorge',
           debugShowCheckedModeBanner: false,
-          home: HomeView(),
+          routerConfig: _router,
         ),
       ),
     );
